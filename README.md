@@ -1,1 +1,3 @@
-# EmbeddedSythesizer
+# # Embedded Stynthesizer
+
+The aim of the project is to implement a multifunctional synthesizer based on the FRDM-KL05Z board. For the purpose of generating the output signal it's using 12 bit Digital to Aanalog Converter(0->2.91V). The base note is being chosed using 4x4 keyboard then the software generates wave (sin, square etc.). Simple wave is stored in memory, and sampled according to desirable frequency. In the next step hamonics are added, completed program should allow detune them, add envelope, LFO, distortion and chorus. The processed samples are being put in buffer and make output at DAC at specific samplerate. 
