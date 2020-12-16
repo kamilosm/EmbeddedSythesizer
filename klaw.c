@@ -1,36 +1,43 @@
 #include "klaw.h"
 #include "frdm_bsp.h"
-#include "fsm.h"
+#include "pit.h" ///////////////////////////
 void buttonsInitialize(void){
-	SIM->SCGC5 |=  SIM_SCGC5_PORTB_MASK; 
-	//PORTB->PCR[BUTTON_1_POS] |= PORT_PCR_MUX(1);      	
-	PORTB->PCR[BUTTON_5_POS] |= PORT_PCR_MUX(1);      	
-	PORTB->PCR[BUTTON_9_POS] |= PORT_PCR_MUX(1); 
+	SIM->SCGC5 |=  SIM_SCGC5_PORTB_MASK;
+		// pins PTB2-PTB8 rows 4-2, cols 4-1
+	PORTB->PCR[R4] |= PORT_PCR_MUX(1);      	
+	PORTB->PCR[R3] |= PORT_PCR_MUX(1);      	
+	PORTB->PCR[R2] |= PORT_PCR_MUX(1); 
+	PORTB->PCR[C4] |= PORT_PCR_MUX(1);
+	PORTB->PCR[C3] |= PORT_PCR_MUX(1);
+	PORTB->PCR[C2] |= PORT_PCR_MUX(1);
 	
-	//PORTB->PCR[BUTTON_1_POS] |=  PORT_PCR_PE_MASK |	PORT_PCR_PS_MASK;
-	//PORTB->PCR[BUTTON_1_POS] |= 	PORT_PCR_IRQC(0xA);	
-	PORTB->PCR[BUTTON_5_POS] |=  PORT_PCR_PE_MASK |		
+	for(uint8_t i=0;i<3;i++){
+		PORTB->PCR[(R4+i)] |=  PORT_PCR_PE_MASK |		
 											 PORT_PCR_PS_MASK;			
-	PORTB->PCR[BUTTON_5_POS] |=  PORT_PCR_IRQC(0xA);	  
-
-	PORTB->PCR[BUTTON_9_POS] |=  PORT_PCR_PE_MASK |		
-											 PORT_PCR_PS_MASK;			
-	PORTB->PCR[BUTTON_9_POS] |=  PORT_PCR_IRQC(0xA);
+		PORTB->PCR[(R4+i)] |=  PORT_PCR_IRQC(0xA);	
+	}
+  
+	for(uint8_t i=0;i<4;i++){
+		PTB->PDDR |= (1<<(C4+i));
+		PTB->PCOR |= (1<<(C4+i)); 
+	}
+	
 	NVIC_ClearPendingIRQ(myPORT_IRQn);				
 	NVIC_EnableIRQ(myPORT_IRQn);							
-	
 	NVIC_SetPriority (myPORT_IRQn, 2);
 	
 }
-
-void PORTB_IRQHandler(void){		
+void keypadSweep(){
+	//set rows as input and columns as output
+	stopPIT();
+	//set cols as input and rows as output
 	
-		if(PORTB->ISFR & (1 << BUTTON_5_POS)){
-			fsmStartStop();
-		while((FPTB->PDIR&(1<<BUTTON_5_POS))==0){
-		
-		}
-		PORTB->PCR[BUTTON_5_POS] |= PORT_PCR_ISF_MASK; 
-	}
+	// pressed key defined by C_pressed and R_pressed combined
+}
+void PORTB_IRQHandler(void){		
+	keypadSweep();
+	for(uint8_t i=0;i<3;i++){
+		PORTB->PCR[(R4+i)] |= PORT_PCR_ISF_MASK;	
+	} 
 }
 

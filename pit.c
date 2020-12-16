@@ -6,31 +6,7 @@
  *      Author: Pawel Russek AGH University of Science and Technology
  *---------------------------------------------------------------------------*/
  
-#include "MKL05Z4.h"                    //Device header
-#include "pit.h"												//Declarations
-#include "fsm.h"
-
-static const IRQn_Type myPIT_IRQn = PIT_IRQn; /* ToDo 6.1: Define interrupt (IRQ) number for PIT. Check MKL05Z4.h or find in NVIC section of KL05 Sub-Family Reference Manual - NVIC section */ 
-
-
-void PIT_IRQHandler() {
-		
-	// check to see which channel triggered interrupt 
-	if (PIT->CHANNEL[0].TFLG & PIT_TFLG_TIF_MASK) {
-		// clear status flag for timer channel 0
-		PIT->CHANNEL[0].TFLG &= PIT_TFLG_TIF_MASK;
-		// Do ISR work
-		fsmOneMSService();
-	} else if (PIT->CHANNEL[1].TFLG & PIT_TFLG_TIF_MASK) {
-		// clear status flag for timer channel 1
-		PIT->CHANNEL[1].TFLG &= PIT_TFLG_TIF_MASK;
-	}
-
-	//clear pending IRQ
-	NVIC_ClearPendingIRQ(myPIT_IRQn);
-	
-}
-
+#include "pit.h"	
  /*----------------------------------------------------------------------------
   Function that initializes PIT timer
  *----------------------------------------------------------------------------*/

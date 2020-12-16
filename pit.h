@@ -1,6 +1,7 @@
 #ifndef pit_h
 #define pit_h
-
+#include "MKL05Z4.h"
+static const IRQn_Type myPIT_IRQn = PIT_IRQn; 
 
 void pitInitialize(unsigned period);
 void startPIT(void);

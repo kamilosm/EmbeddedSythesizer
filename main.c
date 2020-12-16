@@ -9,32 +9,47 @@
 #include "MKL05Z4.h"
 #include "klaw.h"
 #include "pit.h"
-#include "fsm.h"
 #include <stdio.h>
 #include "math.h"
-#include "sintable.c"
+#include "sintable.h"
 #include <string.h>
 #include <stdlib.h>
 #define M_PI 3.14159265358979323846
-
-void delay(int x){
+volatile int16_t pointer=0;
+// bus clock 20971520Hz
+void delay(int x){//10k to 1 ms 
 	for(uint32_t i=0;i<(x*1000);i++)__nop();
 }
 int main (void) 
 {
 	buttonsInitialize();
-	fsmInitialize();
-	pitInitialize( 20900 );
-	startPIT();
-	int t[32000];
-	for(int i=0;i<32000;i++){
-		t[i] = ;
-	}
+	pitInitialize(476);
 	DAC_Init();
-	int j = 0;
+	startPIT();
+	
   while(1)
 	{
-		DAC_Load_Trig(t[j++]);
+		
 	}
 }
-
+void dacIterrupt(){
+	DAC_Load_Trig(sintabl[pointer++]);
+	if(pointer>990){
+		pointer = 0;
+	}
+}
+void PIT_IRQHandler() {
+		
+	// check to see which channel triggered interrupt 
+	if (PIT->CHANNEL[0].TFLG & PIT_TFLG_TIF_MASK) {
+		// clear status flag for timer channel 0
+		PIT->CHANNEL[0].TFLG &= PIT_TFLG_TIF_MASK;
+			dacIterrupt();
+	} else if (PIT->CHANNEL[1].TFLG & PIT_TFLG_TIF_MASK) {
+		// clear status flag for timer channel 1
+		PIT->CHANNEL[1].TFLG &= PIT_TFLG_TIF_MASK;
+	}
+	//clear pending IRQ
+	NVIC_ClearPendingIRQ(myPIT_IRQn);
+	
+}

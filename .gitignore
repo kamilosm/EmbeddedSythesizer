@@ -42,6 +42,19 @@
 *.idb
 *.pdb
 
+# vision files
+*.uvprojx
+.RTE/
+.Objects/
+.Listings/
+*.scvd
+*.txt
+*.ini
+*.htm
+*.mckam
+*.Pracownik
+*.uvoptx
+
 # Kernel Module Compile Results
 *.mod*
 *.cmd
