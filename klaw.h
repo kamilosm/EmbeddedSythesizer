@@ -7,14 +7,17 @@ static const IRQn_Type myPORT_IRQn = PORTB_IRQn;
 #define R4 2
 #define R3 3
 #define R2 4
-#define C4 5
-#define C3 6
-#define C2 7
-#define C1 8
+#define C4 6
+#define C3 7
+#define C2 8
+#define C1 9
 
-//uint8_t R_pressed;
-//uint8_t C_pressed;
-
+static uint8_t R_pressed=10;
+static uint8_t C_pressed=10;
+static uint8_t R_pressed_previous=0;
+static uint8_t C_pressed_previous=0;
+static uint8_t is_pressed=0;
+void buttonIterrupt(void);
 void keypadSweep(void);
 void buttonsInitialize(void);
 // C Cis D Dis * E F Fis G * Gis A Ais B
