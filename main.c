@@ -1,9 +1,21 @@
 /*-------------------------------------------------------------------------
-					Technika Mikroprocesorowa 2 - laboratorium
-					Lab 4 - Ćwiczenie 1: PWM
-					autor: Mariusz Sokołowski
-					wersja: 02.11.2020r.
+					Embedded Synth 
+					Authors: Krzysztof Jedrejasz, Kamil Maczuga
+					Version: 
 ----------------------------------------------------------------------------*/
+/* Notatki notateczki
+*trzeba pomyslec jak rozwiazac kwestie LFO tak zeby miało prawo to działać przy naszym rozmiarz buffora
+*czy te małe buffory są okej, czy może jednak zdecydować się na wypuszczanie próbek i DSP na żywo bez nich? może buffor kołowy,
+ale on chyba nie zmienia nic
+
+Do zrobienia teraz:
+- przetestować czy dzwiek juz idzie ok 
+- dokończyć pozostałe funckje generujące przebiegi i je przetestować
+- dodać oktawy i belnd dla nich
+- naprawić te dwa warningi z getBaseNoteVolume
+- notes shoould be played as long as button is clicked +- small delay
+
+*/
 #include "frdm_bsp.h"
 #include "DAC.h"
 #include "MKL05Z4.h"
@@ -11,96 +23,100 @@
 #include "pit.h"
 #include <stdio.h>
 #include "math.h"
-#include "sintable.h"
+#include "waves.h"
 #include <string.h>
 #include <stdlib.h>
+#include "parameters.h"
 #define M_PI 3.14159265358979323846
+static const int16_t buffer_size=512;
 volatile int16_t pointer=0;
-volatile int max_pointer=999;
-volatile int sin_samples_count=0;
+volatile int16_t max_pointer=0;
+volatile int16_t max_pointer_new=0;
+volatile int16_t sin_samples_count=0;
+volatile int16_t sin_times_in_buffer=0; 
 
-int* sin_buff;
-int* DAC_buffer_1;
-int* DAC_buffer_2;
+int16_t DAC_buffer_1[buffer_size];
+int16_t DAC_buffer_2[buffer_size];
 
-int current_buffer=2;
+int current_buffer=1;
+int first_time=1;
 
 // bus clock 20971520Hz
 
-void delay(int x){//10k to 1 ms 
+void delay(int x){
+	//10k to 1 ms 
 	for(uint32_t i=0;i<(x*1000);i++)__nop();
 }
 int main (void) 
 {
+	initializevar();
 	buttonsInitialize();
 	pitInitialize(476);
 	DAC_Init();
 	startPIT();
-	
+
   while(1)
 	{
 		
 	}
 }
-int* getSinSamples(int ssc){
-	// function returns sin prepared for generatin signal
-	// based on frequency representation in ssc
-	//scc - sin samples count local varriable for this function
-	int sin_sampled_loc[ssc];
-	int r = 4*sin_tabl/ssc;
-	for(uint8_t i=0;i<ssc;i++){
-		if(i<(ssc/4)){
-			sin_sampled_loc[i]=sin_tab[i*r];
-		}
-		else if(i<ssc/2){
-			sin_sampled_loc[i]=sin_tab[sin_tabl-(r*(i-(ssc/4)))];
-		}
-		else if(i<(ssc*3)/4){
-			sin_sampled_loc[i]=-sin_tab[(i-(ssc/2))*r];
-		}
-		else{
-			sin_sampled_loc[i]=-sin_tab[sin_tabl-(r*(i-(3*ssc/4)))];
-		}
-	}
-	return sin_sampled_loc;// JAK TO WŁAŚCIWIE ROZWIĄZAĆ? TODO 
-}
+
 void generateBuffWithSignal(){
 	// its the main dsp function
 	// keep it simple for now
 	// just put sin until no space left
-	for(uint8_t i=0;i<max_pointer;i++){// pretty bad but will do for now 
+	for(uint8_t i=0;i<max_pointer_new;i++){// pretty bad but will do for now 
 		if(current_buffer==1){
 			// another pointer to avoid starting off in different position of sin in the next buffer would be great
-			DAC_buffer_1[i]=sin_buff[i%sin_samples_count];
+			for(int16_t base=0;base<sin_times_in_buffer;base++){
+				getSinSamples((sin_samples_count*base), sin_samples_count, getBaseNoteVolume(), DAC_buffer_2);
+			}
 		}
 		else{
-			DAC_buffer_2[i]=sin_buff[i%sin_samples_count];
+			for(int16_t base=0;base<sin_times_in_buffer;base++){
+				getSinSamples((sin_samples_count*base), sin_samples_count, getBaseNoteVolume(), DAC_buffer_1);
+			}
 		}
 	}
 }
 void dacIterrupt(){
-	if(is_pressed==1){// if key active 
-		if(C_pressed_previous!=C_pressed && R_pressed!=R_pressed_previous){// if key changed
-			sin_samples_count = 40000/buttons[R_pressed][C_pressed];
-			while(max_pointer<1000){
-				max_pointer += sin_samples_count;
+	if(getIs_pressed()==1){// if key active 
+		if(getC_pressed_previous()!=getC_pressed() && getR_pressed()!=getR_pressed_previous()){// if key changed
+			sin_samples_count = 40000/buttons[getR_pressed()][getC_pressed()];
+			sin_times_in_buffer=1;
+			while(max_pointer_new<400 && (max_pointer_new+sin_samples_count)<=buffer_size){
+				max_pointer_new += sin_samples_count;
+				sin_times_in_buffer++;
 			}
-			sin_buff = getSinSamples(sin_samples_count);
+			if(first_time==1){
+				max_pointer=max_pointer_new;
+				pointer=0;
+				first_time=0;
+			}
 			generateBuffWithSignal();
 		}
-		else if(pointer > (max_pointer*2)/3){
+		else if(pointer > (max_pointer*2)/3){//sprawdzic
 			//pointer to high
 			// start generating next buffer
+			max_pointer_new=max_pointer;
 			generateBuffWithSignal();
 		}
 		// to change - output
 		// if i pressed the button i want the samples to play even when its not pressed
 		// until theres no samples left in buffer and another buffer is empty
 		// TODO 
-		DAC_Load_Trig(sin_tab[pointer++]);
-	if(pointer>990){
-		pointer = 0;
 	}
+	if(current_buffer==0){
+			DAC_Load_Trig(DAC_buffer_1[pointer++]);
+		}
+		else{
+			DAC_Load_Trig(DAC_buffer_2[pointer++]);
+	if(pointer==max_pointer){
+			max_pointer=max_pointer_new;
+			pointer = 0;
+			current_buffer^=1;
+		}
+	
 	}
 }
 void PIT_IRQHandler() {
