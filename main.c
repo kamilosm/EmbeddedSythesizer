@@ -9,12 +9,18 @@
 ale on chyba nie zmienia nic
 
 Do zrobienia teraz:
-- przetestować czy dzwiek juz idzie ok 
-- dokończyć pozostałe funckje generujące przebiegi i je przetestować
+- naprawić ten sin i reszte ehhhhh
 - dodać oktawy i belnd dla nich
-- naprawić te dwa warningi z getBaseNoteVolume
 - notes shoould be played as long as button is clicked +- small delay
-
+- przerwa między przyciskami o tej samej nucie
+- pozmieniac nazwy bo nie tylko sin 
+- optymalizacja funcji generujących wavey
+- a gdyby tak przy niezmieniajacym się dzwieku zostać na jednym ubfferze bez generowania? 
+*************od ostatniego commita
+- niepotrzebny for usunięty 
+- bląd z generowaniem sinusa usunięty
+- saw wave, saw, triangle
+- sin buff generates correctly
 */
 #include "frdm_bsp.h"
 #include "DAC.h"
@@ -35,11 +41,15 @@ volatile int16_t max_pointer_new=0;
 volatile int16_t sin_samples_count=0;
 volatile int16_t sin_times_in_buffer=0; 
 
+static const int sample_rate=40000;
+
 int16_t DAC_buffer_1[buffer_size];
 int16_t DAC_buffer_2[buffer_size];
 
-int current_buffer=1;
-int first_time=1;
+int16_t current_buffer=1;
+int16_t first_time=1;
+int16_t play=0;
+
 
 // bus clock 20971520Hz
 
@@ -50,6 +60,7 @@ void delay(int x){
 int main (void) 
 {
 	initializevar();
+	initializeParameters();
 	buttonsInitialize();
 	pitInitialize(476);
 	DAC_Init();
@@ -65,24 +76,54 @@ void generateBuffWithSignal(){
 	// its the main dsp function
 	// keep it simple for now
 	// just put sin until no space left
-	for(uint8_t i=0;i<max_pointer_new;i++){// pretty bad but will do for now 
-		if(current_buffer==1){
-			// another pointer to avoid starting off in different position of sin in the next buffer would be great
+	int16_t* buff_choose ;
+	if(current_buffer==1){
+		buff_choose = DAC_buffer_2;
+	}
+	else{
+		buff_choose = DAC_buffer_1;
+	}
+	switch(getMode()){
+		case 'S':
+				for(int16_t base=0;base<sin_times_in_buffer;base++){
+					getSinSamples((sin_samples_count*base), sin_samples_count, getBaseNoteVolume(), buff_choose);
+				}
+			break;
+		case 'q':
 			for(int16_t base=0;base<sin_times_in_buffer;base++){
-				getSinSamples((sin_samples_count*base), sin_samples_count, getBaseNoteVolume(), DAC_buffer_2);
+				getSquareSamples((sin_samples_count*base), sin_samples_count, getBaseNoteVolume(), buff_choose);
 			}
-		}
-		else{
+			break;
+		case 's':
 			for(int16_t base=0;base<sin_times_in_buffer;base++){
-				getSinSamples((sin_samples_count*base), sin_samples_count, getBaseNoteVolume(), DAC_buffer_1);
+				getSawSamples((sin_samples_count*base), sin_samples_count, getBaseNoteVolume(), buff_choose);
 			}
+			break;
+		case 't':
+			for(int16_t base=0;base<sin_times_in_buffer;base++){
+				getTriangleSamples((sin_samples_count*base), sin_samples_count, getBaseNoteVolume(), buff_choose);
+			}
+			break;
+	}
+	/*
+	if(current_buffer==1){
+		for(int16_t base=0;base<sin_times_in_buffer;base++){
+			getSinSamples((sin_samples_count*base), sin_samples_count, getBaseNoteVolume(), DAC_buffer_2);
 		}
 	}
+	else{
+		for(int16_t base=0;base<sin_times_in_buffer;base++){
+			getSinSamples((sin_samples_count*base), sin_samples_count, getBaseNoteVolume(), DAC_buffer_1);
+		}
+	}
+	*/
 }
 void dacIterrupt(){
 	if(getIs_pressed()==1){// if key active 
 		if(getC_pressed_previous()!=getC_pressed() && getR_pressed()!=getR_pressed_previous()){// if key changed
-			sin_samples_count = 40000/buttons[getR_pressed()][getC_pressed()];
+			play=1;
+			sin_samples_count = sample_rate/buttons[getR_pressed()][getC_pressed()];
+			max_pointer_new=sin_samples_count;
 			sin_times_in_buffer=1;
 			while(max_pointer_new<400 && (max_pointer_new+sin_samples_count)<=buffer_size){
 				max_pointer_new += sin_samples_count;
@@ -94,6 +135,7 @@ void dacIterrupt(){
 				first_time=0;
 			}
 			generateBuffWithSignal();
+			current_buffer^=1; // zle
 		}
 		else if(pointer > (max_pointer*2)/3){//sprawdzic
 			//pointer to high
@@ -106,18 +148,26 @@ void dacIterrupt(){
 		// until theres no samples left in buffer and another buffer is empty
 		// TODO 
 	}
-	if(current_buffer==0){
+	if(play){
+		if(pointer>=max_pointer && max_pointer!=0){
+
+			if(getIs_pressed()==0){
+				play=0;
+				return; // wazne 
+			}
+			max_pointer=max_pointer_new;
+			pointer = 0;
+			current_buffer^=1;
+		} 	
+		if(current_buffer==0){
 			DAC_Load_Trig(DAC_buffer_1[pointer++]);
 		}
 		else{
 			DAC_Load_Trig(DAC_buffer_2[pointer++]);
-	if(pointer==max_pointer){
-			max_pointer=max_pointer_new;
-			pointer = 0;
-			current_buffer^=1;
+
 		}
-	
 	}
+	
 }
 void PIT_IRQHandler() {
 		
