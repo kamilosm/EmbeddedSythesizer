@@ -10,22 +10,26 @@
 ale on chyba nie zmienia nic
 * jak to jest z tym mnożeniem przez floaty, czy będziemy to musieli później optymalizowac? 
 
-Do zrobienia teraz: (najwięcej gwizdek najmniejszy priorytet czasowy)
-- naprawić ten sin i reszte ehhhhh ***  
-- dodać oktawy i belnd dla nich **
+Do zrobienia teraz: (najwięcej gwizdek najmniejszy priorytet czasowy) 
+- bug z erase zero
 - pozmieniac nazwy bo nie tylko sin ****
-- s4 ma mniejszą częstotliwość o 2 hs niż powinien? 
 Zadania, które są bardziej pytaniami:
 - optymalizacja funcji generujących wavey ****
 - a gdyby tak przy niezmieniajacym się dzwieku zostać na jednym bufferze bez generowania? ****
-- napisać komentarze do każdego pliku/ zreadagować te które już są, każdy plik powinien mieć u góry mają opisówkę po co właściwie jest *******
+   - napisać komentarze do każdego pliku/ zreadagować te które już są, każdy plik powinien mieć u góry mają opisówkę po co właściwie jest *******
 - unormować nazewnictwo ********************
 - zmienne z klaw przenieść do engine?(C_pressed, R_pressed) ************************
 - przenieść PIT_IRQHandler do pitu, jak z includem dac? ****************************
-- czasem naciśnięcie button2 zwraca button 4(s4), dlaczego? ****************************
+- rozwiązanie przypisań w generowaniu waves czy dobrze? 
+- czy da się zaimplementować arpeggio? 
+- envelope czy da się? 
+- jak rozwiązać kwestie parametrów dodatkowych?(potencjometry - kilka podłączonych na przerwaniu? 
+
 ++++++++++++++++++++++od ostatniego commita+++++++++++++++++++++++++++++++++++++++++++
-- rozdzielenie funkcjonalnosci do engine.h/c 
-- przebudowanie logiki przemiatania klawiatury(chyba już wszystko jest tak jak ma być) 
+- added mainloop and flags that fixed the issues with wave sounds
+- bnv factor added
+- much testing
+- octave blend (with bug)
 */
 #include "frdm_bsp.h"
 #include "engine.h"
@@ -51,10 +55,7 @@ int main (void)
 	DAC_Init();
 	startPIT();
 
-  while(1)
-	{
-		
-	}
+  mainLoop();
 }
 void dacIterrupt(){
 	dacPlaySample();

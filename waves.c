@@ -14,16 +14,16 @@ void getSinSamples(int16_t base,int16_t ssc, float bnv, int16_t *buffer_ref){
 	int r = 4*sin_tabl/ssc;
 	for(uint16_t i=0;i<ssc;i++){
 		if(i<(ssc/4)){
-			buffer_ref[base+i]=sin_tab[i*r];
+			buffer_ref[base+i]=(sin_tab[i*r]);
 		}
 		else if(i<ssc/2){
-			buffer_ref[base+i]=sin_tab[sin_tabl-(r*(i-(ssc/4)))-1];
+			buffer_ref[base+i]=(sin_tab[sin_tabl-(r*(i-(ssc/4)))-1]);
 		}
 		else if(i<(ssc*3)/4){
-			buffer_ref[base+i]=sin_tab[sin_tabl-(i-(ssc/2))*r-1]-halfvalue;
+			buffer_ref[base+i]=(sin_tab[sin_tabl-(i-(ssc/2))*r-1]-halfvalue);
 		}
 		else{
-			buffer_ref[base+i]=sin_tab[(r*(i-(3*ssc/4)))]-halfvalue;
+			buffer_ref[base+i]=(sin_tab[(r*(i-(3*ssc/4)))]-halfvalue);
 		}
 	}
 }
@@ -31,15 +31,15 @@ void getSquareSamples(int16_t base,int16_t ssc, float bnv, int16_t *buffer_ref){
 	// function returns square wave generated for given parameters
 	for(uint16_t i=0;i<ssc;i++){
 		if(i<(ssc/2)){
-			buffer_ref[base+i]=max_value;
+			buffer_ref[base+i]+=max_value*bnv;
 		}else{
-			buffer_ref[base+i]=min_value;
+			buffer_ref[base+i]+=min_value;
 		}
 	}
 }
 void getSawSamples(int16_t base,int16_t ssc, float bnv, int16_t *buffer_ref){
 	// function returns saw wave generated for given parameters
-	int16_t step = max_value/ssc;
+	int16_t step = (max_value/ssc)*bnv;
 	buffer_ref[base]=min_value;
 	for(uint16_t i=1;i<ssc;i++){
 		buffer_ref[base+i]=(step+buffer_ref[base+i-1]);
@@ -47,7 +47,7 @@ void getSawSamples(int16_t base,int16_t ssc, float bnv, int16_t *buffer_ref){
 }
 void getTriangleSamples(int16_t base,int16_t ssc, float bnv, int16_t *buffer_ref){
 	// function returns triangle wave generated for given parameters
-	int16_t step = (max_value*2)/ssc;
+	int16_t step = bnv*((max_value*2)/ssc);
 	int16_t ssc2= ssc/2;
 	buffer_ref[base]=min_value;
 	for(uint16_t i=1;i<ssc;i++){
