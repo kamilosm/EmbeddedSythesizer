@@ -1,12 +1,13 @@
 #include "klaw.h"
 #include "frdm_bsp.h"
 #include "pit.h"
-// TODO przycisk musi sie odklikiwac 
+
 uint8_t R_pressed;
 uint8_t C_pressed;
 uint8_t R_pressed_previous;
 uint8_t C_pressed_previous;
 uint8_t is_pressed;
+uint16_t prev_pressed=0;
 
 void initializevar(){
 	R_pressed=10;
@@ -14,22 +15,6 @@ void initializevar(){
 	R_pressed_previous=0;
 	C_pressed_previous=0;
 	is_pressed=0;
-}
-
-void buttonIterrupt(){
-	for(uint8_t i=0;i<3;i++){
-		PORTB->PCR[(R4+i)] |=  PORT_PCR_PE_MASK |		
-											 PORT_PCR_PS_MASK;			
-	}
-	for(uint8_t i=0;i<4;i++){
-		PTB->PDDR |= (1<<(C4+i));
-		PTB->PCOR |= (1<<(C4+i)); 
-	}
-}
-void maskin(){
-	for(uint8_t i=0;i<3;i++){
-		PORTB->PCR[(R4+i)] |=  PORT_PCR_IRQC(0xA);	
-	}
 }
 void buttonsInitialize(void){
 	SIM->SCGC5 |=  SIM_SCGC5_PORTB_MASK;
@@ -42,15 +27,10 @@ void buttonsInitialize(void){
 	PORTB->PCR[C2] |= PORT_PCR_MUX(1);
 	PORTB->PCR[C1] |= PORT_PCR_MUX(1);
 	
-	buttonIterrupt();
-	maskin();
-	
-	NVIC_ClearPendingIRQ(myPORT_IRQn);				
-	NVIC_EnableIRQ(myPORT_IRQn);							
-	NVIC_SetPriority (myPORT_IRQn, 3);
-	
 }
-void keypadSweep(){ // working fine
+void keypadSweep(){ 
+	prev_pressed=is_pressed;
+	is_pressed=0;
 	//set rows as input and columns as output
 	for(uint8_t i=0;i<3;i++){
 		PORTB->PCR[(R4+i)] |=  PORT_PCR_PE_MASK |		
@@ -68,6 +48,7 @@ void keypadSweep(){ // working fine
 			is_pressed=1;
 			R_pressed_previous = R_pressed;
 			R_pressed=i;
+			break;
 		}
 	}
 	//set cols as input and rows as output
@@ -88,16 +69,16 @@ void keypadSweep(){ // working fine
 		{
 			C_pressed_previous=C_pressed;
 			C_pressed=i;
+			break;
 		}
 	}
 	// pressed key defined by C_pressed and R_pressed combined
-}
-void PORTB_IRQHandler(void){		
-	keypadSweep();
-	for(uint8_t i=0;i<3;i++){
-		PORTB->PCR[(R4+i)] |= PORT_PCR_ISF_MASK;	
-	} 
-	buttonIterrupt();
+	// generate buffer
+	if(getIs_pressed()==1){// if key active 
+		if((getC_pressed_previous()!=getC_pressed() | getR_pressed()!=getR_pressed_previous()) | (prev_pressed==0)){
+			pressedButtonBuffReact();
+		}
+	}
 }
 
 uint8_t getIs_pressed(){

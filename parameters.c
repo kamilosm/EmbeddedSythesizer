@@ -6,7 +6,7 @@ float base_note_volume; // 0 -> 1
 
 // initialization
 void initializeParameters(){
-	mode = 'S';
+	mode = 's';
 	base_note_volume = 0.7;
 }
 

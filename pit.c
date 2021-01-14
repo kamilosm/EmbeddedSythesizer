@@ -36,7 +36,6 @@ void pitInitialize(unsigned period) {
 
 }
 
-
 void startPIT(void) {
 // Enable counter
 	PIT->CHANNEL[0].TCTRL |= PIT_TCTRL_TEN_MASK;

@@ -27,7 +27,7 @@ void getSinSamples(int16_t base,int16_t ssc, float bnv, int16_t *buffer_ref){
 		}
 	}
 }
-void getSquareSamples(int16_t base,int16_t ssc, float bnv, int16_t *buffer_ref){ // TODO
+void getSquareSamples(int16_t base,int16_t ssc, float bnv, int16_t *buffer_ref){
 	// function returns square wave generated for given parameters
 	for(uint16_t i=0;i<ssc;i++){
 		if(i<(ssc/2)){
@@ -37,7 +37,7 @@ void getSquareSamples(int16_t base,int16_t ssc, float bnv, int16_t *buffer_ref){
 		}
 	}
 }
-void getSawSamples(int16_t base,int16_t ssc, float bnv, int16_t *buffer_ref){ //TODO
+void getSawSamples(int16_t base,int16_t ssc, float bnv, int16_t *buffer_ref){
 	// function returns saw wave generated for given parameters
 	int16_t step = max_value/ssc;
 	buffer_ref[base]=min_value;
@@ -45,7 +45,7 @@ void getSawSamples(int16_t base,int16_t ssc, float bnv, int16_t *buffer_ref){ //
 		buffer_ref[base+i]=(step+buffer_ref[base+i-1]);
 	}
 }
-void getTriangleSamples(int16_t base,int16_t ssc, float bnv, int16_t *buffer_ref){ //TODO
+void getTriangleSamples(int16_t base,int16_t ssc, float bnv, int16_t *buffer_ref){
 	// function returns triangle wave generated for given parameters
 	int16_t step = (max_value*2)/ssc;
 	int16_t ssc2= ssc/2;
