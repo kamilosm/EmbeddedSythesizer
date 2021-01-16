@@ -8,6 +8,7 @@ static const IRQn_Type myPORT_IRQn = PORTB_IRQn;
 #define R4 2
 #define R3 3
 #define R2 4
+#define R1 10
 #define C4 6
 #define C3 7
 #define C2 8
