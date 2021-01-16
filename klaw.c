@@ -10,8 +10,8 @@ uint8_t is_pressed;
 uint16_t prev_pressed=0;
 
 void initializevar(){
-	R_pressed=10;
-	C_pressed=10;
+	R_pressed=11;
+	C_pressed=11;
 	R_pressed_previous=0;
 	C_pressed_previous=0;
 	is_pressed=0;
@@ -21,7 +21,8 @@ void buttonsInitialize(void){
 		// pins PTB2-PTB8 rows 4-2, cols 4-1
 	PORTB->PCR[R4] |= PORT_PCR_MUX(1);      	
 	PORTB->PCR[R3] |= PORT_PCR_MUX(1);      	
-	PORTB->PCR[R2] |= PORT_PCR_MUX(1); 
+	PORTB->PCR[R2] |= PORT_PCR_MUX(1);
+	PORTB->PCR[R1] |= PORT_PCR_MUX(1); 	
 	PORTB->PCR[C4] |= PORT_PCR_MUX(1);
 	PORTB->PCR[C3] |= PORT_PCR_MUX(1);
 	PORTB->PCR[C2] |= PORT_PCR_MUX(1);
@@ -32,18 +33,22 @@ void keypadSweep(){
 	prev_pressed=is_pressed;
 	is_pressed=0;
 	//set rows as input and columns as output
-	for(uint8_t i=0;i<3;i++){
+	for(uint8_t i=0;i<4;i++){ //
 		PORTB->PCR[(R4+i)] |=  PORT_PCR_PE_MASK |		
 											 PORT_PCR_PS_MASK;	
 		PTB->PDDR &= ~(1<<(R4+i));
+		if (i==3)
+			{PORTB->PCR[10] |=  PORT_PCR_PE_MASK |		
+											 PORT_PCR_PS_MASK;	
+		PTB->PDDR &= ~(1<<10);}
 	}
 	for(uint8_t i=0;i<4;i++){
 		PTB->PDDR |= (1<<(C4+i));
 		PTB->PCOR |= (1<<(C4+i)); 
 	}
 	
-	for(uint8_t i=0;i<3;i++){
-		if(( PTB->PDIR & (1<<(R4+i)) ) ==0)
+	for(uint8_t i=0;i<4;i++){
+		if((( PTB->PDIR & (1<<(R4+i)) ) ==0) || (( PTB->PDIR & (1<<(10)) ) ==0))
 		{
 			is_pressed=1;
 			R_pressed_previous = R_pressed;
@@ -59,9 +64,11 @@ void keypadSweep(){
 		PTB->PDDR &= ~(1<<(C4+i));
 		PTB->PSOR |= (1<<(C4+i));
 	}
-	for(uint8_t i=0;i<3;i++){
+	for(uint8_t i=0;i<4;i++){
 		PTB->PDDR |= (1<<(R4+i));
 		PTB->PCOR |= (1<<(R4+i));
+		if (i==3)
+			{PTB->PCOR |= (1<<(10));}
 	}
 	
 	for(uint8_t i=0;i<4;i++){
@@ -112,3 +119,4 @@ void setR_pressed_previous(uint8_t i){
 void setC_pressed_previous(uint8_t i){
 	C_pressed_previous=i;
 }
+
