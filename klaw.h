@@ -8,11 +8,11 @@ static const IRQn_Type myPORT_IRQn = PORTB_IRQn;
 #define R4 2
 #define R3 3
 #define R2 4
-#define R1 10
 #define C4 6
 #define C3 7
 #define C2 8
 #define C1 9
+#define R1 10
 
 void initializevar(void);
 
@@ -31,6 +31,6 @@ void setR_pressed(uint8_t);
 void setC_pressed(uint8_t);
 void setR_pressed_previous(uint8_t);
 void setC_pressed_previous(uint8_t);
-void maskin(void);
+void waveSweep(void);
 	
 #endif  /* KLAW_H */

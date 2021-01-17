@@ -14,8 +14,8 @@ volatile int16_t max_pointer_new=0;
 volatile int16_t sin_samples_count=0;
 volatile int16_t sin_times_in_buffer=0; 
 
-int16_t DAC_buffer_1[buffer_size];
-int16_t DAC_buffer_2[buffer_size];
+volatile int16_t DAC_buffer_1[buffer_size];
+volatile int16_t DAC_buffer_2[buffer_size];
 
 int16_t freq; //pomocnicza 
 
@@ -29,10 +29,8 @@ int16_t changeBuffer = 0;
 void mainLoop (){
 	while(1){
 		if(generateBuffer==1){
-			//eraseBuffer(buffer_size);
-			//base note 
-			generateBuffWithSignal(getBaseNoteVolume(), 1);
-			//doDSP();
+			generateBuffWithSignal(getBaseNoteVolume(),getOctaveVolume()) ;
+			doDSP();
 			generateBuffer=0;
 			if(changeBuffer==1){
 				current_buffer^=1; 
@@ -43,19 +41,18 @@ void mainLoop (){
 	}
 }
 void doDSP(){
-	//octave blend
-	generateBuffWithSignal(getBaseNoteVolume(), 12);
+	
+	
 }
 void eraseBuffer(int16_t buffer_size){ // ?
-		int16_t zero = 0;
 	if(current_buffer==1){
-		for(int16_t i=0;i<buffer_size;i++){
-			DAC_buffer_2[i]=zero;
+		for(volatile int16_t i=0;i<buffer_size;i++){
+			DAC_buffer_2[i]=0;
 		}
 	}
 	else{
-		for(int16_t i=0;i<buffer_size;i++){
-			DAC_buffer_1[i]=zero;
+		for(volatile int16_t i=0;i<buffer_size;i++){
+			DAC_buffer_1[i]=0;
 		}
 	}
 	
@@ -75,8 +72,6 @@ void pressedButtonBuffReact(){
 				pointer=0;
 				first_time=0;
 			}
-			//generateBuffWithSignal();
-			//current_buffer^=1; 
 			generateBuffer=1;
 			changeBuffer=1;
 	
@@ -85,21 +80,10 @@ void pressedButtonBuffReact(){
 		// until theres no samples left in buffer and another buffer is empty
 		// TODO 
 }
-void generateBuffWithSignal(float volume, int16_t pitch){
-	// its the main dsp function
-	// keep it simple for now
+void generateBuffWithSignal(float volume, float volume_octave){
 	// just put sin until no space left
-	int16_t interval_size;
-	//choose pitch
-	if(pitch == 1){
-		interval_size = sin_samples_count;
-	}
-	else if(pitch == 12){
-		//octave
-		interval_size = sin_samples_count/2;
-	}
 	
-	int16_t* buff_choose ;
+	volatile int16_t* buff_choose ;
 	if(current_buffer==1){
 		buff_choose = DAC_buffer_2;
 	}
@@ -108,23 +92,40 @@ void generateBuffWithSignal(float volume, int16_t pitch){
 	}
 	switch(getMode()){
 		case 'S':
-				for(int16_t base=0;base<sin_times_in_buffer;base++){
-					getSinSamples((interval_size*base), sin_samples_count, volume, buff_choose);
+			for(volatile int16_t base=0;base<sin_times_in_buffer;base++){	
+				volatile int16_t base_i = base * sin_samples_count;
+				if(volume_octave<0.05){
+					getSinSamples(base_i, sin_samples_count, volume, buff_choose);
+				}else{
+					getSinSamplesWithOctave(base_i, sin_samples_count, volume, volume_octave, buff_choose);
 				}
+			}
 			break;
 		case 'q':
-			for(int16_t base=0;base<sin_times_in_buffer;base++){
-				getSquareSamples((interval_size*base), sin_samples_count, volume, buff_choose);
+			for(volatile int16_t base=0;base<sin_times_in_buffer;base++){
+				volatile int16_t base_i = base * sin_samples_count;
+			  if(volume_octave<0.05)
+				  {getSquareSamples(base_i, sin_samples_count, volume, buff_choose);}
+				else
+					{getSquareSamplesWithOctave(base_i, sin_samples_count, volume, volume_octave, buff_choose);}
 			}
 			break;
 		case 's':
-			for(int16_t base=0;base<sin_times_in_buffer;base++){
-				getSawSamples((interval_size*base), sin_samples_count, volume, buff_choose);
+			for(volatile int16_t base=0;base<sin_times_in_buffer;base++){
+				volatile int16_t base_i = base * sin_samples_count;
+				if(volume_octave<0.05)
+					{getSawSamples(base_i, sin_samples_count, volume, buff_choose);}
+				else
+					{getSawSamplesWithOctave(base_i, sin_samples_count, volume, volume_octave, buff_choose);}
 			}
 			break;
 		case 't':
-			for(int16_t base=0;base<sin_times_in_buffer;base++){
-				getTriangleSamples((interval_size*base), sin_samples_count, volume, buff_choose);
+			for(volatile int16_t base=0;base<sin_times_in_buffer;base++){
+				volatile int16_t base_i = base * sin_samples_count;
+				if(volume_octave<0.05)
+					{getTriangleSamples(base_i, sin_samples_count, volume, buff_choose);}
+				else
+					{getTriangleSamplesWithOctave(base_i, sin_samples_count, volume, volume_octave, buff_choose);}
 			}
 			break;
 	}
@@ -152,7 +153,23 @@ void dacPlaySample(){
 	if(getIs_pressed()==1 && pointer > (max_pointer*2)/3)
 	{
 		max_pointer_new=max_pointer;
-		//generateBuffWithSignal();
 		generateBuffer = 1;
+	}
+}
+void changeWaveShape(uint8_t C_pressed_wave)
+{
+	switch(C_pressed_wave){
+		case 0:
+			setMode('S');
+			break;
+		case 1:
+			setMode('s');
+			break;
+		case 2:
+			setMode('q');
+			break;
+		case 3:
+			setMode('t');
+			break;
 	}
 }
