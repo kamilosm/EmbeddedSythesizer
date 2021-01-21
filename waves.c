@@ -15,17 +15,49 @@ void getSinSamplesWithOctave(int16_t base, int16_t ssc, float bnv, float onv, vo
 	/*
 		Wersja z mniejszym uzyciem pamieci gdzie mamy tylko 1/4 sinusa zapisana
 		musielismy jednak z niej zrezygnowac z powodu tego jak duzo takie dzialania kosztowaly cykli procesora
-	if(i<(ssc/4)){
-		buff_ref[base+i] = bnv*(sin_tab[i*r])+onv*(sin_tab[i*r]);
+	int r=(4*sin_tabl)/ssc;
+	int16_t ssc1_8 = ssc/8;
+	int16_t ssc1_4 = ssc/4;
+	int16_t ssc3_8 = ssc*3/8;
+	int16_t ssc1_2 = ssc/2;
+	int16_t ssc5_8 = ssc*5/8;
+	int16_t ssc3_4 = ssc*3/4;
+	int16_t ssc7_8 = ssc*7/8;
+	if(i<ssc1_4){
+		buff_ref[base+i] = bnv*(sin_tab[i*r]);
+		if(i<(ssc1_8)){
+			buff_ref[base+i] += onv*(sin_tab[i*2*r]);
+		}
+		else{
+			buff_ref[base+i] += onv*(sin_tab[sin_tabl-(r*(i-(ssc1_8))*2)-1]);
+		}
 	}
-	else if(i<ssc/2){
-		buff_ref[base+i] = bnv*(sin_tab[sin_tabl-(r*(i-(ssc/4)))-1]);
+	else if(i<ssc1_2){
+		buff_ref[base+i] = bnv*(sin_tab[sin_tabl-(r*(i-(ssc1_4)))-1]);
+		if(i<(ssc3_8){
+			buff_ref[base+i] += onv*(sin_tab[sin_tabl-2*(i-(ssc1_4))*r-1]-halfvalue);
+		}
+		else{
+			buff_ref[base+i] += onv*(sin_tab[(r*2*(i-(ssc3_8)))]-halfvalue);
+		}
 	}
-	else if(i<(ssc*3)/4){
+	else if(i<ssc3_4){
 		buff_ref[base+i] = bnv*(sin_tab[sin_tabl-(i-(ssc/2))*r-1]-halfvalue);
+		if(i<ssc5_8){
+				buff_ref[base+i] += onv*(sin_tab[(i-ssc1_2)*2*r]);
+		}
+		else{
+			buff_ref[base+i] += onv*(sin_tab[sin_tabl-(r*(i-(ssc5_8))*2)-1]);
+		}
 	}
 	else{
 		buff_ref[base+i] = bnv*(sin_tab[(r*(i-(3*ssc/4)))]-halfvalue);
+		if(i<ssc7_8){
+			buff_ref[base+i] += onv*(sin_tab[sin_tabl-2*(i-(ssc3_4))*r-1]-halfvalue);
+		}
+		else{
+			buff_ref[base+i] += onv*(sin_tab[(r*2*(i-(ssc7_8)))]-halfvalue);
+		}
 	}
 }*/
 	int16_t r = (sin_tabl/ssc);
@@ -44,6 +76,7 @@ void getSinSamples(int16_t base, int16_t ssc, float bnv, volatile int16_t* buffe
 }
 void getSquareSamplesWithOctave(int16_t base, int16_t ssc, float bnv, float onv, volatile int16_t* buffer_ref){
 	// function returns square wave generated for given parameters
+	// but this one also contains octave higher same wave shape generator
 	int16_t ssc1_4= ssc/4;
 	int16_t ssc2= ssc/2;
 	int16_t ssc3_4= ssc*3/4;
@@ -73,6 +106,7 @@ void getSquareSamples(int16_t base,int16_t ssc, float bnv,volatile int16_t *buff
 }
 void getSawSamplesWithOctave(int16_t base, int16_t ssc, float bnv, float onv, volatile int16_t* buffer_ref){
 	// function returns saw wave generated for given parameters
+	// but this one also contains octave higher same wave shape generator
 	int16_t step = (max_value/ssc)*bnv;
 	int16_t step_oc = (max_value/(ssc/2))*onv;
 	buffer_ref[base] = min_value;
@@ -93,6 +127,7 @@ void getSawSamples(int16_t base,int16_t ssc, float bnv,volatile int16_t *buffer_
 }
 void getTriangleSamplesWithOctave(int16_t base, int16_t ssc, float bnv, float onv, volatile int16_t* buffer_ref){
 	// function returns triangle wave generated for given parameters
+	// but this one also contains octave higher same wave shape generator
 	int16_t step = bnv *2*(max_value/ssc);
 	int16_t step_oc = onv *4*(max_value/ssc);
 	int16_t ssc1_4= ssc/4;

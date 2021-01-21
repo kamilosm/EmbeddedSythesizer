@@ -8,22 +8,15 @@
 
 Do zrobienia teraz: (najwięcej gwizdek najmniejszy priorytet czasowy) 
 - potencjometr do regulowania mocy okatawy i nuty bazowej *
-- implementacja najprostszej formy reverbu *
+- implementacja najprostszej formy delay *
 - szkielet teoretyczny envelope **
-- pozmieniac nazwy bo nie tylko sin ****
-- napisać komentarze do każdego pliku/ zreadagować te które już są, każdy plik powinien mieć u góry mają opisówkę po co właściwie jest *******
 
 Zadania, które są bardziej pytaniami:
-- optymalizacja funcji generujących wavey ****
 - przenieść PIT_IRQHandler do pitu, jak z includem dac? ****************************
-- czy da się zaimplementować arpeggio? 
-- envelope czy da się? 
 - jak rozwiązać kwestie parametrów dodatkowych?(potencjometry - kilka podłączonych na przerwaniu? 
 
 ++++++++++++++++++++++od ostatniego commita+++++++++++++++++++++++++++++++++++++++++++
-- all wave functions were given an octave generating overloading function
-- u can select waveshape by s13-16
-- huge optimalisation of main sample generating fuctions 
+- code cleaned refactored and commented properly
 */
 #include "frdm_bsp.h"
 #include "engine.h"
@@ -41,10 +34,12 @@ int16_t sweep_pointer=0;
 int16_t sweep_freq=400;
 int main (void) 
 {
+	// starting pit and initializing all the necesary things
 	sweep_pointer=sweep_freq;
 	initializevar();
 	initializeParameters();
 	buttonsInitialize();
+	// this should give us a pit frequency around the 40kHz value
 	pitInitialize(476);
 	DAC_Init();
 	startPIT();

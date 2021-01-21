@@ -20,6 +20,10 @@ void buttonIterrupt(void);
 void keypadSweep(void);
 void buttonsInitialize(void);
 
+void waveSweep(void);
+
+// encapsulation
+
 uint8_t getIs_pressed(void);
 uint8_t getR_pressed(void);
 uint8_t getC_pressed(void);
@@ -31,6 +35,5 @@ void setR_pressed(uint8_t);
 void setC_pressed(uint8_t);
 void setR_pressed_previous(uint8_t);
 void setC_pressed_previous(uint8_t);
-void waveSweep(void);
 	
 #endif  /* KLAW_H */

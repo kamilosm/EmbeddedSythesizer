@@ -1,14 +1,14 @@
 #include "parameters.h"
 
-//parameters // change to divider eg x/100? 
+//parameters 
 char mode; // S - sinwave, s - saw, q-square, t-triangle
 float base_note_volume; // 0 -> 1
 float octave_volume;
-// initialization
+// initialization of the parameters
 void initializeParameters(){
 	mode = 'S';
-	base_note_volume = 0.7;
-	octave_volume = 0.3;
+	base_note_volume = 0.5;
+	octave_volume = 0.5;
 }
 
 // encapsulation
